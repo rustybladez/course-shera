@@ -18,6 +18,11 @@ class Settings(BaseSettings):
     storage_dir: str = "./storage"
     public_base_url: str = "http://localhost:8000"
 
+    # JWT secret for our own token generation
+    jwt_secret: str = "dev-secret-change-in-production"
+    jwt_algorithm: str = "HS256"
+    jwt_expire_minutes: int = 60 * 24 * 7  # 7 days
+
 
 settings = Settings()
 

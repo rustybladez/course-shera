@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import os
+import sys
 import uuid
+
+# Add backend directory to Python path so we can import app
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from sqlalchemy import text
 

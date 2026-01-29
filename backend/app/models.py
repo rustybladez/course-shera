@@ -13,6 +13,18 @@ class Base(DeclarativeBase):
     pass
 
 
+class Profile(Base):
+    __tablename__ = "profiles"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    role: Mapped[str] = mapped_column(String(16))  # admin | student
+    name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=lambda: dt.datetime.now(dt.timezone.utc))
+    updated_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=lambda: dt.datetime.now(dt.timezone.utc), onupdate=lambda: dt.datetime.now(dt.timezone.utc))
+
+
 class Course(Base):
     __tablename__ = "courses"
 
@@ -34,7 +46,8 @@ class Material(Base):
     category: Mapped[str] = mapped_column(String(16))  # theory | lab
     title: Mapped[str] = mapped_column(String(255))
     type: Mapped[str] = mapped_column(String(32))  # pdf | slides | code | note | link
-    storage_path: Mapped[str] = mapped_column(Text)  # local path for MVP
+    storage_path: Mapped[str | None] = mapped_column(Text, nullable=True)  # local path; null for type=link
+    link_url: Mapped[str | None] = mapped_column(Text, nullable=True)  # for type=link
 
     week: Mapped[int | None] = mapped_column(nullable=True)
     topic: Mapped[str | None] = mapped_column(String(255), nullable=True)

@@ -16,7 +16,10 @@ def _ensure_storage_dir() -> None:
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title=settings.app_name)
+    app = FastAPI(
+        title=settings.app_name,
+        redirect_slashes=False,  # Disable auto-redirect from /path to /path/
+    )
 
     app.add_middleware(
         CORSMiddleware,

@@ -6,6 +6,11 @@ import uuid
 from pydantic import BaseModel, Field
 
 
+class MeOut(BaseModel):
+    user_id: str
+    role: str  # admin | student
+
+
 class CourseCreate(BaseModel):
     title: str
     code: str | None = None
@@ -36,11 +41,31 @@ class MaterialOut(BaseModel):
     category: str
     title: str
     type: str
-    storage_url: str
+    storage_url: str | None = None  # null when type=link
+    link_url: str | None = None
     week: int | None = None
     topic: str | None = None
     tags: list[str] | None = None
     created_at: dt.datetime
+
+
+class MaterialUpdate(BaseModel):
+    title: str | None = None
+    category: str | None = Field(default=None, pattern="^(theory|lab)$")
+    type: str | None = Field(default=None, pattern="^(pdf|slides|code|note|link)$")
+    week: int | None = None
+    topic: str | None = None
+    tags: list[str] | None = None
+    link_url: str | None = None
+
+
+class MaterialLinkCreate(BaseModel):
+    course_id: uuid.UUID
+    title: str
+    link_url: str
+    topic: str | None = None
+    week: int | None = None
+    tags: list[str] | None = None
 
 
 class SearchRequest(BaseModel):
