@@ -49,15 +49,27 @@ def generate(req: GenerateRequest, db: Session = Depends(get_db)):
     if not gemini.is_configured():
         raise HTTPException(status_code=400, detail="GEMINI_API_KEY is not configured")
 
-    # Retrieve context first (RAG)
     q_emb = gemini.embed([req.prompt])[0]
-    rows = run_search(
-        db,
-        query_embedding=q_emb,
-        course_id=req.course_id,
-        category=None,
-        top_k=6,
-    )
+    try:
+        rows = run_search(
+            db,
+            query_embedding=q_emb,
+            query_text=req.prompt,
+            course_id=req.course_id,
+            category=None,
+            top_k=6,
+            use_hybrid=True,
+        )
+    except Exception:
+        rows = run_search(
+            db,
+            query_embedding=q_emb,
+            query_text="",
+            course_id=req.course_id,
+            category=None,
+            top_k=6,
+            use_hybrid=False,
+        )
 
     citations = [r.chunk_id for r in rows]
     sources = []

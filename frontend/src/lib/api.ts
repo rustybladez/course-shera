@@ -19,6 +19,10 @@ export type SearchHit = {
   category: "theory" | "lab";
   excerpt: string;
   score: number;
+  language?: string | null;
+  symbol_name?: string | null;
+  start_line?: number | null;
+  end_line?: number | null;
 };
 
 export type Me = { user_id: string; role: "admin" | "student" };
@@ -260,20 +264,54 @@ export function materialFileUrl(id: string): string {
   return `${API_URL}/materials/${id}/file`;
 }
 
-export async function search(
-  query: string,
-  opts?: { courseId?: string; category?: "theory" | "lab"; topK?: number },
-  token?: string,
-) {
+export type SearchParams = {
+  query: string;
+  course_id?: string;
+  category?: "theory" | "lab";
+  top_k?: number;
+  language?: string;
+  symbol?: string;
+  use_hybrid?: boolean;
+};
+
+export async function search(params: SearchParams, token?: string) {
   return apiFetch<{ hits: SearchHit[] }>(
     "/search",
     {
       method: "POST",
       body: JSON.stringify({
-        course_id: opts?.courseId ?? null,
-        query,
-        category: opts?.category ?? null,
-        top_k: opts?.topK ?? 8,
+        query: params.query,
+        course_id: params.course_id ?? null,
+        category: params.category ?? null,
+        top_k: params.top_k ?? 12,
+        language: params.language ?? null,
+        symbol: params.symbol ?? null,
+        use_hybrid: params.use_hybrid ?? true,
+      }),
+    },
+    token,
+  );
+}
+
+export type SearchAskResult = {
+  answer: string;
+  citations: string[];
+  hits: SearchHit[];
+};
+
+export async function searchAsk(
+  params: { query: string; course_id?: string; category?: "theory" | "lab"; top_k?: number },
+  token?: string,
+) {
+  return apiFetch<SearchAskResult>(
+    "/search/ask",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        query: params.query,
+        course_id: params.course_id ?? null,
+        category: params.category ?? null,
+        top_k: params.top_k ?? 8,
       }),
     },
     token,

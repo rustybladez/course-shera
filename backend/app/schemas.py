@@ -72,7 +72,10 @@ class SearchRequest(BaseModel):
     course_id: uuid.UUID | None = None
     query: str
     category: str | None = Field(default=None, pattern="^(theory|lab)$")
-    top_k: int = 8
+    top_k: int = 12
+    language: str | None = None  # filter code chunks by language, e.g. python, javascript
+    symbol: str | None = None  # filter by symbol_name (substring match)
+    use_hybrid: bool = True  # combine semantic + full-text search
 
 
 class SearchHit(BaseModel):
@@ -82,9 +85,26 @@ class SearchHit(BaseModel):
     category: str
     excerpt: str
     score: float
+    language: str | None = None
+    symbol_name: str | None = None
+    start_line: int | None = None
+    end_line: int | None = None
 
 
 class SearchResponse(BaseModel):
+    hits: list[SearchHit]
+
+
+class SearchAskRequest(BaseModel):
+    course_id: uuid.UUID | None = None
+    query: str
+    category: str | None = Field(default=None, pattern="^(theory|lab)$")
+    top_k: int = 8
+
+
+class SearchAskResponse(BaseModel):
+    answer: str
+    citations: list[uuid.UUID]
     hits: list[SearchHit]
 
 
