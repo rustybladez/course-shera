@@ -1,96 +1,138 @@
-"use client";
 
-import { useState } from "react";
-import { generate } from "@/lib/api";
+import React, { useState, useRef } from 'react';
+import Layout from './components/Layout';
+import MaterialGenerator from './components/MaterialGenerator';
+import TheoryViewer, { TheoryViewerHandle } from './components/TheoryViewer';
+import SlidesViewer from './components/SlidesViewer';
+import LabViewer from './components/LabViewer';
+// import VoiceAssistant from './components/VoiceAssistant';
+import { GeminiService } from './services/geminiService';
+import { LearningMaterials, AppState } from './types';
 
-type Mode = "theory_notes" | "slides" | "lab_code";
+const App: React.FC = () => {
+  const [state, setState] = useState<AppState>({
+    materials: null,
+    isLoading: false,
+    error: null,
+    isGeneratingImages: false
+  });
+  
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const theoryRef = useRef<TheoryViewerHandle>(null);
 
-export default function GeneratePage() {
-  const [mode, setMode] = useState<Mode>("theory_notes");
-  const [prompt, setPrompt] = useState("");
-  const [out, setOut] = useState<string>("");
-  const [validation, setValidation] = useState<unknown>(null);
-  const [err, setErr] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  async function onRun() {
-    setLoading(true);
-    setErr(null);
+  const handleGenerate = async (prompt: string) => {
+    setState(prev => ({ ...prev, isLoading: true, error: null }));
     try {
-      const res = await generate(mode, prompt);
-      setOut(res.content_markdown);
-      setValidation(res.validation ?? null);
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e));
-    } finally {
-      setLoading(false);
+      const result = await GeminiService.generateMaterials(prompt);
+      setState(prev => ({ ...prev, materials: result, isLoading: false }));
+      setActiveTab('notes');
+    } catch (err: any) {
+      setState(prev => ({ ...prev, isLoading: false, error: err.message || 'Generation failed' }));
     }
-  }
+  };
 
-  return (
-    <div className="mx-auto max-w-5xl px-6 py-10">
-      <h2 className="text-2xl font-semibold tracking-tight">Generate</h2>
-      <p className="mt-1 text-sm text-zinc-600">
-        Retrieval-first generation grounded in your ingested course materials.
-      </p>
+  const handleSidebarExportPDF = () => {
+    // If not on notes tab, switch to it first so the ref is available, 
+    // or we can store the export function more globally.
+    // For simplicity, we ensure we're in 'notes' view or use a hidden component.
+    if (activeTab !== 'notes') {
+      setActiveTab('notes');
+      // Small delay to allow ref to mount if it wasn't
+      setTimeout(() => theoryRef.current?.exportPDF(), 100);
+    } else {
+      theoryRef.current?.exportPDF();
+    }
+  };
 
-      <div className="mt-6 grid gap-3">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <label className="text-sm font-medium text-zinc-700">Mode</label>
-          <select
-            value={mode}
-            onChange={(e) => setMode(e.target.value as Mode)}
-            className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-400 sm:w-[240px]"
-          >
-            <option value="theory_notes">Theory notes</option>
-            <option value="slides">Slides (Markdown)</option>
-            <option value="lab_code">Lab code</option>
-          </select>
-        </div>
-
-        <textarea
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          placeholder="e.g. Summarize RAG with an example, and include common pitfalls."
-          rows={4}
-          className="w-full rounded-2xl border border-zinc-200 bg-white p-4 text-sm outline-none focus:border-zinc-400"
-        />
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => void onRun()}
-            disabled={!prompt.trim() || loading}
-            className="rounded-xl bg-zinc-900 px-5 py-3 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-60"
-          >
-            {loading ? "Generating…" : "Generate"}
-          </button>
-          <div className="text-xs text-zinc-500">
-            Tip: ingest at least one material first for better grounding.
+  const renderContent = () => {
+    if (state.isLoading) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full py-20 text-center animate-pulse">
+          <div className="relative mb-12">
+            <div className="w-32 h-32 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <i className="fas fa-microchip text-indigo-600 text-3xl animate-bounce"></i>
+            </div>
+          </div>
+          <h2 className="text-3xl font-black text-slate-800 mb-4 tracking-tight">Synthesizing Education...</h2>
+          <p className="text-slate-500 max-w-lg mx-auto text-lg leading-relaxed font-medium">
+            Cross-referencing global knowledge bases and generating grounded theory, visual aids, and coding challenges.
+          </p>
+          <div className="mt-8 flex gap-2">
+            <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"></span>
+            <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce delay-100"></span>
+            <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce delay-200"></span>
           </div>
         </div>
-      </div>
+      );
+    }
 
-      {err ? (
-        <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {err}
-        </div>
-      ) : null}
+    if (!state.materials || activeTab === 'dashboard') {
+      return (
+        <div className="space-y-12">
+          <div className="animate-fade-in-up">
+            <MaterialGenerator onGenerate={handleGenerate} isGenerating={state.isLoading} />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="group bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+              <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex-shrink-0 flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <i className="fas fa-globe-americas text-xl"></i>
+              </div>
+              <h4 className="font-bold text-slate-800 text-lg mb-2">Web Grounded</h4>
+              <p className="text-sm text-slate-500 leading-relaxed">Verified against real-time academic sources and documentation via Google Search integration.</p>
+            </div>
+            
+            <div className="group bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+              <div className="w-14 h-14 bg-purple-50 text-purple-600 rounded-2xl flex-shrink-0 flex items-center justify-center mb-6 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                <i className="fas fa-brain text-xl"></i>
+              </div>
+              <h4 className="font-bold text-slate-800 text-lg mb-2">Reasoning Core</h4>
+              <p className="text-sm text-slate-500 leading-relaxed">Uses Gemini 3 Pro with deep-thinking capabilities to explain complex logical concepts clearly.</p>
+            </div>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-2">
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <div className="text-sm font-semibold">Output (Markdown)</div>
-          <pre className="mt-3 max-h-[520px] overflow-auto whitespace-pre-wrap break-words rounded-xl bg-zinc-950 p-4 text-xs text-zinc-50">
-            {out || "No output yet."}
-          </pre>
+            <div className="group bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+              <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex-shrink-0 flex items-center justify-center mb-6 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                <i className="fas fa-code-branch text-xl"></i>
+              </div>
+              <h4 className="font-bold text-slate-800 text-lg mb-2">Practice Ready</h4>
+              <p className="text-sm text-slate-500 leading-relaxed">Automatically generates syntactically correct code labs and exercises for immediate practical application.</p>
+            </div>
+          </div>
+
+          {state.error && (
+            <div className="p-6 bg-rose-50 border border-rose-100 text-rose-600 rounded-2xl text-center font-bold shadow-sm animate-shake">
+              <i className="fas fa-triangle-exclamation mr-3"></i>
+              {state.error}
+            </div>
+          )}
         </div>
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <div className="text-sm font-semibold">Validation (MVP)</div>
-          <pre className="mt-3 max-h-[520px] overflow-auto whitespace-pre-wrap break-words rounded-xl bg-zinc-50 p-4 text-xs text-zinc-900">
-            {validation ? JSON.stringify(validation, null, 2) : "No validation yet."}
-          </pre>
-        </div>
-      </div>
-    </div>
+      );
+    }
+
+    switch (activeTab) {
+      case 'notes':
+        return <TheoryViewer ref={theoryRef} topic={state.materials.topic} notes={state.materials.readingNotes} sources={state.materials.groundingSources} />;
+      case 'slides':
+        return <SlidesViewer slides={state.materials.slides} />;
+      case 'lab':
+        return <LabViewer lab={state.materials.lab} />;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <Layout 
+      activeTab={activeTab} 
+      onTabChange={setActiveTab} 
+      onExportPDF={handleSidebarExportPDF}
+      hasMaterials={!!state.materials}
+    >
+      {renderContent()}
+      
+    </Layout>
   );
-}
+};
 
+export default App;

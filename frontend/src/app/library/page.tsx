@@ -11,7 +11,7 @@ import {
   type ListMaterialsFilters,
 } from "@/lib/api";
 import { useMe } from "@/lib/use-me";
-import { LogoutButton } from "@/components/LogoutButton";
+
 
 export default function LibraryPage() {
   const router = useRouter();
