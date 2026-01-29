@@ -7,7 +7,7 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
 # Check if setup has been run
-if (-not (Test-Path "backend\.venv")) {
+if (-not (Test-Path "backend\venv")) {
     Write-Host "ERROR: Virtual environment not found. Please run setup.ps1 first." -ForegroundColor Red
     exit 1
 }
@@ -21,21 +21,26 @@ if (-not (Test-Path "backend\.env")) {
 
 Write-Host ""
 Write-Host "Starting development servers..." -ForegroundColor Green
-Write-Host "(Press Ctrl+C to stop all servers)" -ForegroundColor Yellow
 Write-Host ""
 
 # Start backend in a new window
 Write-Host "📦 Starting FastAPI backend on http://localhost:8000" -ForegroundColor Cyan
-Start-Process pwsh -ArgumentList "-NoExit", "-Command", "cd backend; & '.\.venv\Scripts\Activate.ps1'; uvicorn app.main:app --reload --port 8000"
+Start-Process pwsh -ArgumentList "-NoExit", "-File", ".\start-backend.ps1"
 
-# Start frontend in a new window
+# Wait a bit for backend to start
+Start-Sleep -Seconds 2
+
+# Start frontend in a new window  
 Write-Host "⚛️  Starting Next.js frontend on http://localhost:3000" -ForegroundColor Cyan
-Start-Process pwsh -ArgumentList "-NoExit", "-Command", "cd frontend; npm run dev"
+Start-Process pwsh -ArgumentList "-NoExit", "-File", ".\start-frontend.ps1"
 
 Write-Host ""
-Write-Host "✓ Servers started in new windows" -ForegroundColor Green
+Write-Host "✓ Servers starting in new windows..." -ForegroundColor Green
 Write-Host "  Backend:  http://localhost:8000" -ForegroundColor White
 Write-Host "  Frontend: http://localhost:3000" -ForegroundColor White
 Write-Host ""
-Write-Host "Press any key to close this window..." -ForegroundColor Yellow
-$null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+Write-Host "Tip: Use Ctrl+C in each window to stop individual servers" -ForegroundColor Yellow
+Write-Host ""
+Write-Host "Opening frontend in browser in 3 seconds..." -ForegroundColor Green
+Start-Sleep -Seconds 3
+Start-Process "http://localhost:3000"

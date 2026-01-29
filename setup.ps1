@@ -30,14 +30,14 @@ Write-Host "Setting up backend..." -ForegroundColor Yellow
 Push-Location backend
 
 # Create virtual environment if it doesn't exist
-if (-not (Test-Path ".venv")) {
+if (-not (Test-Path "venv")) {
     Write-Host "  Creating Python virtual environment..."
-    python -m venv .venv
+    python -m venv venv
 }
 
 # Activate virtual environment
 Write-Host "  Activating virtual environment..."
-& ".\.venv\Scripts\Activate.ps1"
+& ".\venv\Scripts\Activate.ps1"
 
 # Install dependencies
 Write-Host "  Installing Python dependencies..."
@@ -74,7 +74,7 @@ if (-not (Test-Path ".env.local")) {
 
 # Install Node dependencies
 Write-Host "  Installing Node.js dependencies (this may take a moment)..."
-npm install --q
+npm install -q
 
 Pop-Location
 
