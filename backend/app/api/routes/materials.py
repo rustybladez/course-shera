@@ -139,7 +139,7 @@ async def upload_material(
         week=week,
         topic=topic,
         tags=tag_list,
-        created_by=user.clerk_user_id,
+        created_by=user.user_id,
     )
     db.add(m)
     db.commit()
@@ -168,7 +168,7 @@ def add_link_material(
         week=body.week,
         topic=body.topic,
         tags=body.tags,
-        created_by=user.clerk_user_id,
+        created_by=user.user_id,
     )
     db.add(m)
     db.commit()

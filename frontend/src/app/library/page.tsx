@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   listCourses,
   listMaterials,
@@ -19,28 +19,58 @@ export default function LibraryPage() {
   const [items, setItems] = useState<Material[]>([]);
   const [courses, setCourses] = useState<Array<{ id: string; title: string }>>([]);
   const [filters, setFilters] = useState<ListMaterialsFilters>({});
+  const [debouncedFilters, setDebouncedFilters] = useState<ListMaterialsFilters>({});
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+  const abortController = useRef<AbortController | null>(null);
+
+  // Debounce filter changes to avoid race conditions
+  useEffect(() => {
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+    debounceTimer.current = setTimeout(() => {
+      setDebouncedFilters(filters);
+    }, 500); // 500ms debounce
+
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, [filters]);
 
   const load = useCallback(async () => {
     const token = await getToken();
     if (!token) return;
+    
+    // Cancel previous request
+    if (abortController.current) {
+      abortController.current.abort();
+    }
+    abortController.current = new AbortController();
+
     setErr(null);
     setLoading(true);
     try {
       const [mats, cs] = await Promise.all([
-        listMaterials(filters, token),
-        listCourses(token),
+        listMaterials(debouncedFilters, token, abortController.current.signal),
+        listCourses(token, abortController.current.signal),
       ]);
       setItems(mats);
       setCourses(cs.map((c) => ({ id: c.id, title: c.title })));
     } catch (e) {
+      // Ignore abort errors (from previous requests being cancelled)
+      if (e instanceof Error && e.name === "AbortError") {
+        return;
+      }
       setErr(e instanceof Error ? e.message : String(e));
     } finally {
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
+  }, [debouncedFilters]);
 
   useEffect(() => {
     if (meLoading) return;

@@ -45,10 +45,12 @@ async function apiFetch<T>(
   path: string,
   init?: RequestInit,
   token?: string,
+  signal?: AbortSignal,
 ): Promise<T> {
   const isJson = init?.body != null && typeof init.body === "string" && !(init.body instanceof FormData);
   const res = await fetch(`${API_URL}${path}`, {
     ...init,
+    signal,
     headers: {
       ...(init?.headers as Record<string, string>),
       ...headers(!!isJson, token),
@@ -130,16 +132,17 @@ export async function getMe(token?: string): Promise<Me> {
 export async function listMaterials(
   filters?: ListMaterialsFilters,
   token?: string,
+  signal?: AbortSignal,
 ): Promise<Material[]> {
   const sp = new URLSearchParams();
   if (filters?.courseId) sp.set("course_id", filters.courseId);
   if (filters?.category) sp.set("category", filters.category);
   if (filters?.type) sp.set("type", filters.type);
   if (filters?.week != null) sp.set("week", String(filters.week));
-  if (filters?.topic) sp.set("topic", filters.topic);
-  if (filters?.tags) sp.set("tags", filters.tags);
+  if (filters?.topic && filters.topic.trim()) sp.set("topic", filters.topic.trim());
+  if (filters?.tags && filters.tags.trim()) sp.set("tags", filters.tags.trim());
   const q = sp.toString();
-  return apiFetch<Material[]>(`/materials${q ? `?${q}` : ""}`, {}, token);
+  return apiFetch<Material[]>(`/materials${q ? `?${q}` : ""}`, {}, token, signal);
 }
 
 export async function getMaterial(id: string, token?: string): Promise<Material> {
@@ -148,8 +151,9 @@ export async function getMaterial(id: string, token?: string): Promise<Material>
 
 export async function listCourses(
   token?: string,
+  signal?: AbortSignal,
 ): Promise<Array<{ id: string; title: string; code?: string | null; term?: string | null }>> {
-  return apiFetch("/courses", {}, token);
+  return apiFetch("/courses", {}, token, signal);
 }
 
 export async function createCourse(
