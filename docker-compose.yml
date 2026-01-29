@@ -1,0 +1,16 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: course-shera-db
+    environment:
+      POSTGRES_DB: course_shera
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - course-shera-pgdata:/var/lib/postgresql/data
+
+volumes:
+  course-shera-pgdata:
+
