@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useMe } from '@/lib/use-me';
 
 interface UnifiedLayoutProps {
   children: React.ReactNode;
@@ -8,6 +9,7 @@ interface UnifiedLayoutProps {
 
 export const UnifiedLayout: React.FC<UnifiedLayoutProps> = ({ children }) => {
   const pathname = usePathname();
+  const { isAdmin } = useMe();
   
   const isActive = (path: string) => pathname === path;
   
@@ -76,19 +78,23 @@ export const UnifiedLayout: React.FC<UnifiedLayoutProps> = ({ children }) => {
             <span className="font-medium">Chat</span>
           </Link>
           
-          <div className="h-px bg-indigo-800/50 my-4"></div>
-          
-          <Link
-            href="/admin/upload"
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-              isActive('/admin/upload')
-                ? 'bg-indigo-600 text-white shadow-lg' 
-                : 'text-indigo-300 hover:bg-white/5 hover:text-white'
-            }`}
-          >
-            <i className="fas fa-upload w-5"></i>
-            <span className="font-medium">Admin Upload</span>
-          </Link>
+          {isAdmin && (
+            <>
+              <div className="h-px bg-indigo-800/50 my-4"></div>
+              
+              <Link
+                href="/admin/upload"
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                  isActive('/admin/upload')
+                    ? 'bg-indigo-600 text-white shadow-lg' 
+                    : 'text-indigo-300 hover:bg-white/5 hover:text-white'
+                }`}
+              >
+                <i className="fas fa-upload w-5"></i>
+                <span className="font-medium">Admin Upload</span>
+              </Link>
+            </>
+          )}
         </nav>
         
         <div className="p-6 border-t border-indigo-900/50">

@@ -38,7 +38,7 @@ const MaterialGenerator: React.FC<MaterialGeneratorProps> = ({ onGenerate, isGen
           onChange={(e) => setPrompt(e.target.value)}
           placeholder="e.g., Deep Learning Architecture"
           disabled={isGenerating}
-          className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-lg"
+          className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-lg text-slate-900 placeholder:text-slate-400"
         />
         <button
           type="submit"
