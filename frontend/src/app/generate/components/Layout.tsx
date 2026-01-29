@@ -1,5 +1,6 @@
 
 import React from 'react';
+import Link from 'next/link';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -14,30 +15,62 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, onExp
     <div className="flex h-screen overflow-hidden bg-slate-50">
       {/* Sidebar */}
       <aside className="w-72 bg-indigo-950 text-white flex-shrink-0 flex flex-col no-print hidden md:flex">
-        <div className="p-6 border-b border-indigo-900/50 flex items-center gap-3">
-          <div className="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-            <i className="fas fa-graduation-cap text-white text-xl"></i>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xl font-bold tracking-tight">EduGenius</span>
-            <span className="text-[10px] uppercase tracking-widest text-indigo-400 font-semibold">AI Learning Engine</span>
-          </div>
+        <div className="p-6 border-b border-indigo-900/50">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+              <i className="fas fa-graduation-cap text-white text-xl"></i>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl font-bold tracking-tight">Course Shera</span>
+              <span className="text-[10px] uppercase tracking-widest text-indigo-400 font-semibold">AI Learning Engine</span>
+            </div>
+          </Link>
         </div>
         
         <nav className="flex-1 p-4 space-y-8 overflow-y-auto mt-4">
-          {/* Main Dashboard Link */}
-          <div>
-            <button
-              onClick={() => onTabChange('dashboard')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                activeTab === 'dashboard' 
-                  ? 'bg-indigo-600 text-white shadow-lg' 
-                  : 'text-indigo-300 hover:bg-white/5 hover:text-white'
-              }`}
+          {/* Navigation Links */}
+          <div className="space-y-1">
+            <Link
+              href="/library"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-indigo-300 hover:bg-white/5 hover:text-white"
             >
-              <i className="fas fa-columns w-5"></i>
-              <span className="font-medium">Overview</span>
-            </button>
+              <i className="fas fa-book w-5"></i>
+              <span className="font-medium">Library</span>
+            </Link>
+            
+            <Link
+              href="/search"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-indigo-300 hover:bg-white/5 hover:text-white"
+            >
+              <i className="fas fa-search w-5"></i>
+              <span className="font-medium">Search</span>
+            </Link>
+            
+            <Link
+              href="/chat"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-indigo-300 hover:bg-white/5 hover:text-white"
+            >
+              <i className="fas fa-comments w-5"></i>
+              <span className="font-medium">Chat</span>
+            </Link>
+          </div>
+
+          {/* Generate Module Section */}
+          <div className="space-y-2">
+            <h3 className="px-4 text-[11px] font-bold text-indigo-400 uppercase tracking-[0.2em]">Generate Module</h3>
+            <div className="space-y-1">
+              <button
+                onClick={() => onTabChange('dashboard')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                  activeTab === 'dashboard' 
+                    ? 'bg-indigo-600 text-white shadow-lg' 
+                    : 'text-indigo-300 hover:bg-white/5 hover:text-white'
+                }`}
+              >
+                <i className="fas fa-columns w-5"></i>
+                <span className="font-medium">Overview</span>
+              </button>
+            </div>
           </div>
 
           {/* Theory Section */}
@@ -97,29 +130,9 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, onExp
                 <i className="fas fa-code w-5 text-emerald-400"></i>
                 <span className="text-sm font-medium">Code Sandbox</span>
               </button>
-              
-              <button
-                disabled={true} // Placeholder for future feature
-                className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-emerald-300/30 cursor-not-allowed opacity-50"
-              >
-                <i className="fas fa-flask-vial w-5"></i>
-                <span className="text-sm font-medium">Hands-on Exercises</span>
-              </button>
             </div>
           </div>
         </nav>
-        
-        <div className="p-6 border-t border-indigo-900/50">
-          <div className="flex items-center gap-3 bg-indigo-900/40 p-3 rounded-xl border border-indigo-800/50">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 overflow-hidden flex items-center justify-center">
-              <img src="https://picsum.photos/seed/ai-tutor/100" alt="avatar" className="opacity-80" />
-            </div>
-            <div className="text-sm overflow-hidden">
-              <div className="font-bold truncate">Prof. Gemini</div>
-              <div className="text-indigo-400 text-[10px] uppercase font-bold">Level 10 Assistant</div>
-            </div>
-          </div>
-        </div>
       </aside>
 
       {/* Main Content */}
@@ -132,19 +145,6 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, onExp
             <h1 className="text-sm font-bold text-slate-400 uppercase tracking-widest">
               {activeTab === 'dashboard' ? 'Learning Dashboard' : `Module / ${activeTab}`}
             </h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex -space-x-2">
-               {[1,2,3].map(i => (
-                 <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 overflow-hidden">
-                    <img src={`https://i.pravatar.cc/150?u=${i}`} alt="user" />
-                 </div>
-               ))}
-            </div>
-            <div className="h-6 w-[1px] bg-slate-200 mx-2"></div>
-            <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-indigo-700 transition-all shadow-md shadow-indigo-200">
-              Save Session
-            </button>
           </div>
         </header>
 

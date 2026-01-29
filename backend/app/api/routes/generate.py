@@ -16,29 +16,35 @@ router = APIRouter()
 def _system_prompt(mode: str) -> str:
     if mode == "theory_notes":
         return (
-            "You are a course assistant. Write clean, structured Markdown notes.\n"
+            "You are an expert course assistant. Write comprehensive, well-structured Markdown notes.\n"
             "Rules:\n"
-            "- Use headings, bullet points, examples.\n"
-            "- ONLY use information supported by the provided SOURCES.\n"
-            "- When you state a fact, add a citation marker like [cite:CHUNK_ID].\n"
+            "- Use headings, bullet points, clear examples, and diagrams where helpful.\n"
+            "- Draw from your general knowledge to explain concepts thoroughly.\n"
+            "- When SOURCES are provided, integrate them and add citation markers [cite:CHUNK_ID].\n"
+            "- If SOURCES don't cover the topic fully, use your expertise to fill gaps while noting what's from your knowledge vs. sources.\n"
+            "- Make content educational, accurate, and easy to understand.\n"
         )
     if mode == "slides":
         return (
-            "You are a course assistant. Create slide content in Markdown (Marp-style).\n"
+            "You are an expert course assistant. Create engaging slide content in Markdown.\n"
             "Rules:\n"
-            "- Keep each slide concise.\n"
-            "- ONLY use information supported by the provided SOURCES.\n"
-            "- Add [cite:CHUNK_ID] in speaker notes or near claims.\n"
+            "- Keep each slide concise with clear bullet points.\n"
+            "- Create 5-8 slides covering the topic comprehensively.\n"
+            "- Use '---' to separate slides.\n"
+            "- Draw from your general knowledge to explain concepts.\n"
+            "- When SOURCES are provided, cite them with [cite:CHUNK_ID] in content or speaker notes.\n"
+            "- Make slides visually structured and presentation-ready.\n"
         )
     if mode == "lab_code":
         return (
-            "You are a lab assistant. Produce code-centric learning material.\n"
+            "You are an expert lab instructor. Create comprehensive code-centric learning material.\n"
             "Rules:\n"
-            "- Output Markdown.\n"
-            "- Include a runnable code example.\n"
-            "- Be syntactically correct.\n"
-            "- ONLY use patterns from SOURCES.\n"
-            "- Add [cite:CHUNK_ID] near explanations.\n"
+            "- Include complete, runnable code examples with proper syntax.\n"
+            "- Provide detailed explanations of how the code works.\n"
+            "- Specify the programming language clearly.\n"
+            "- Draw from your programming knowledge to create best-practice examples.\n"
+            "- When SOURCES are provided with code patterns, cite them with [cite:CHUNK_ID].\n"
+            "- Include practical exercises or variations for learners to try.\n"
         )
     return "You are a helpful assistant."
 
@@ -83,11 +89,23 @@ def generate(req: GenerateRequest, db: Session = Depends(get_db)):
             }
         )
 
-    user = (
-        f"USER PROMPT:\n{req.prompt}\n\n"
-        f"SOURCES (JSON):\n{json.dumps(sources, ensure_ascii=False)}\n\n"
-        "Now produce the requested output."
-    )
+    if sources:
+        user = (
+            f"USER PROMPT:\n{req.prompt}\n\n"
+            f"RELEVANT COURSE MATERIALS (optional context to integrate if helpful):\n"
+            f"{json.dumps(sources, ensure_ascii=False)}\n\n"
+            "Generate comprehensive content for the user's prompt. "
+            "If the provided materials are relevant, integrate them and cite with [cite:CHUNK_ID]. "
+            "If materials don't fully cover the topic, use your general knowledge to create complete, educational content."
+        )
+    else:
+        user = (
+            f"USER PROMPT:\n{req.prompt}\n\n"
+            "No specific course materials were found for this topic. "
+            "Generate comprehensive educational content using your general knowledge. "
+            "Make it thorough, accurate, and well-structured."
+        )
+    
     md = gemini.generate_markdown(_system_prompt(req.mode), user)
 
     # Minimal validation: ensure at least one citation marker if we had sources.

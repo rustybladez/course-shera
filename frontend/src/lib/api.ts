@@ -51,7 +51,7 @@ async function apiFetch<T>(
   token?: string,
   signal?: AbortSignal,
 ): Promise<T> {
-  const isJson = init?.body != null && typeof init.body === "string" && !(init.body instanceof FormData);
+  const isJson = init?.body != null && typeof init.body === "string";
   const res = await fetch(`${API_URL}${path}`, {
     ...init,
     signal,

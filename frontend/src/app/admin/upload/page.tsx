@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -15,7 +14,7 @@ import {
   type Material,
 } from "@/lib/api";
 import { useMe } from "@/lib/use-me";
-import { LogoutButton } from "@/components/LogoutButton";
+import { UnifiedLayout } from "@/components/UnifiedLayout";
 
 export default function AdminUploadPage() {
   const router = useRouter();
@@ -225,309 +224,361 @@ export default function AdminUploadPage() {
 
   if (meLoading || !me) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-zinc-500">Loading…</p>
-      </div>
+      <UnifiedLayout>
+        <div className="flex items-center justify-center h-full">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-200 border-t-indigo-600"></div>
+        </div>
+      </UnifiedLayout>
     );
   }
 
   if (!isAdmin) return null;
 
   return (
-    <div className="min-h-screen bg-zinc-50">
-      <header className="border-b border-zinc-200 bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-6">
-            <Link href="/" className="text-lg font-semibold">
-              Course Shera
-            </Link>
-            <nav className="flex gap-4">
-              <Link href="/library" className="text-sm text-zinc-500 hover:text-zinc-900">
-                Library
-              </Link>
-              <Link href="/admin/upload" className="text-sm font-medium text-zinc-900">
-                Admin
-              </Link>
-            </nav>
-          </div>
-          <LogoutButton />
-        </div>
+    <UnifiedLayout>
+      <header className="h-16 bg-white border-b border-slate-200 flex items-center px-8">
+        <h1 className="text-sm font-bold text-slate-400 uppercase tracking-widest">
+          Admin Panel
+        </h1>
       </header>
 
-      <main className="mx-auto max-w-3xl px-6 py-10">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-semibold tracking-tight">Admin CMS</h2>
-            <p className="mt-1 text-sm text-zinc-600">
-              Create courses, upload materials, add links, edit metadata, ingest.
+      <section className="flex-1 overflow-y-auto bg-slate-50/50 p-8">
+        <div className="mx-auto max-w-4xl flex flex-col gap-6">
+          <div className="rounded-2xl border-2 border-indigo-100 bg-white p-6 shadow-sm">
+            <h2 className="text-2xl font-bold text-slate-900">Admin CMS</h2>
+            <p className="mt-2 text-sm text-slate-700">
+              ⚙️ Create courses, upload materials, add links, edit metadata, and ingest documents.
             </p>
           </div>
-          <Link className="text-sm font-medium text-zinc-700 underline" href="/library">
-            View library
-          </Link>
-        </div>
 
-        {err && (
-          <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            {err}
-          </div>
-        )}
+          {err && (
+            <div className="rounded-xl border-2 border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
+              ⚠️ {err}
+            </div>
+          )}
 
-        <section className="mt-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <h3 className="text-sm font-semibold">Course</h3>
-          <div className="mt-3 grid gap-3 sm:grid-cols-3">
-            <select
-              value={courseId}
-              onChange={(e) => setCourseId(e.target.value)}
-              className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-400"
-            >
-              {courses.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.title}
-                </option>
-              ))}
-            </select>
-            <input
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              placeholder="New course title"
-              className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-400"
-            />
-            <button
-              onClick={() => void onCreateCourse()}
-              disabled={busy}
-              className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-60"
-            >
-              Create course
-            </button>
-            <input
-              value={newCode}
-              onChange={(e) => setNewCode(e.target.value)}
-              placeholder="Code (optional)"
-              className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-400"
-            />
-            <input
-              value={newTerm}
-              onChange={(e) => setNewTerm(e.target.value)}
-              placeholder="Term (optional)"
-              className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-400"
-            />
-          </div>
-        </section>
-
-        <section className="mt-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <h3 className="text-sm font-semibold">Upload file</h3>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value as "theory" | "lab")}
-              className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-400"
-            >
-              <option value="theory">Theory</option>
-              <option value="lab">Lab</option>
-            </select>
-            <select
-              value={type}
-              onChange={(e) => setType(e.target.value as "pdf" | "slides" | "code" | "note")}
-              className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-400"
-            >
-              <option value="pdf">PDF</option>
-              <option value="slides">Slides</option>
-              <option value="code">Code</option>
-              <option value="note">Note</option>
-            </select>
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Title (optional)"
-              className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-400"
-            />
-            <input
-              value={week}
-              onChange={(e) => setWeek(e.target.value)}
-              placeholder="Week (optional)"
-              className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-400"
-            />
-            <input
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              placeholder="Topic (optional)"
-              className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-400"
-            />
-            <input
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              placeholder="Tags (comma-separated)"
-              className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-400"
-            />
-          </div>
-          <input
-            type="file"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="mt-3 block w-full text-sm text-zinc-700 file:mr-4 file:rounded-xl file:border-0 file:bg-zinc-100 file:px-4 file:py-2 file:text-sm file:font-medium file:text-zinc-900 hover:file:bg-zinc-200"
-          />
-          <div className="mt-3 flex gap-3">
-            <button
-              onClick={() => void onUpload()}
-              disabled={busy || !courseId || !file}
-              className="rounded-xl bg-zinc-900 px-5 py-3 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-60"
-            >
-              {busy ? "Uploading…" : "Upload"}
-            </button>
-            {uploaded && (
-              <span className="self-center text-sm text-emerald-600">
-                Uploaded. Ingest from list below.
-              </span>
-            )}
-          </div>
-        </section>
-
-        <section className="mt-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <h3 className="text-sm font-semibold">Add link</h3>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <input
-              value={linkTitle}
-              onChange={(e) => setLinkTitle(e.target.value)}
-              placeholder="Title *"
-              className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-400"
-            />
-            <input
-              value={linkUrl}
-              onChange={(e) => setLinkUrl(e.target.value)}
-              placeholder="URL *"
-              className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-400"
-            />
-            <input
-              value={linkTopic}
-              onChange={(e) => setLinkTopic(e.target.value)}
-              placeholder="Topic (optional)"
-              className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-400"
-            />
-            <input
-              value={linkWeek}
-              onChange={(e) => setLinkWeek(e.target.value)}
-              placeholder="Week (optional)"
-              className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-400"
-            />
-            <input
-              value={linkTags}
-              onChange={(e) => setLinkTags(e.target.value)}
-              placeholder="Tags (comma-separated)"
-              className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-400 sm:col-span-2"
-            />
-          </div>
-          <button
-            onClick={() => void onAddLink()}
-            disabled={busy || !courseId || !linkTitle || !linkUrl}
-            className="mt-3 rounded-xl bg-zinc-900 px-5 py-3 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-60"
-          >
-            Add link
-          </button>
-        </section>
-
-        <section className="mt-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <h3 className="text-sm font-semibold">Materials</h3>
-          <div className="mt-3 space-y-3">
-            {materials.map((m) => (
-              <div
-                key={m.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-zinc-100 p-3"
-              >
-                {editId === m.id ? (
-                  <>
-                    <div className="flex flex-1 flex-wrap gap-2">
-                      <input
-                        value={editForm.title}
-                        onChange={(e) =>
-                          setEditForm((f) => ({ ...f, title: e.target.value }))
-                        }
-                        placeholder="Title"
-                        className="rounded-lg border border-zinc-200 px-2 py-1 text-sm"
-                      />
-                      <input
-                        value={editForm.topic}
-                        onChange={(e) =>
-                          setEditForm((f) => ({ ...f, topic: e.target.value }))
-                        }
-                        placeholder="Topic"
-                        className="rounded-lg border border-zinc-200 px-2 py-1 text-sm"
-                      />
-                      <input
-                        value={editForm.week}
-                        onChange={(e) =>
-                          setEditForm((f) => ({ ...f, week: e.target.value }))
-                        }
-                        placeholder="Week"
-                        className="w-16 rounded-lg border border-zinc-200 px-2 py-1 text-sm"
-                      />
-                      <input
-                        value={editForm.tags}
-                        onChange={(e) =>
-                          setEditForm((f) => ({ ...f, tags: e.target.value }))
-                        }
-                        placeholder="Tags"
-                        className="rounded-lg border border-zinc-200 px-2 py-1 text-sm"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => void onUpdate()}
-                        disabled={busy}
-                        className="rounded-lg bg-zinc-900 px-3 py-1 text-xs font-medium text-white"
-                      >
-                        Save
-                      </button>
-                      <button
-                        onClick={() => setEditId(null)}
-                        className="rounded-lg border border-zinc-200 px-3 py-1 text-xs"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div>
-                      <span className="font-medium">{m.title}</span>
-                      <span className="ml-2 text-xs text-zinc-500">
-                        {m.category} · {m.type}
-                        {m.week != null ? ` · Week ${m.week}` : ""}
-                      </span>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => startEdit(m)}
-                        className="rounded-lg border border-zinc-200 px-3 py-1 text-xs hover:bg-zinc-50"
-                      >
-                        Edit
-                      </button>
-                      {m.type !== "link" && (
-                        <button
-                          onClick={() => void onIngest(m)}
-                          disabled={ingestId != null}
-                          className="rounded-lg bg-zinc-900 px-3 py-1 text-xs font-medium text-white disabled:opacity-60"
-                        >
-                          {ingestId === m.id ? "Ingesting…" : "Ingest"}
-                        </button>
-                      )}
-                      <button
-                        onClick={() => void onDelete(m)}
-                        disabled={busy}
-                        className="rounded-lg border border-red-200 px-3 py-1 text-xs text-red-600 hover:bg-red-50"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </>
-                )}
+          <div className="rounded-2xl border-2 border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="text-lg font-bold text-slate-900 mb-4">📚 Course Management</h3>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Select Course</label>
+                <select
+                  value={courseId}
+                  onChange={(e) => setCourseId(e.target.value)}
+                  className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors focus:border-indigo-500"
+                >
+                  {courses.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.title}
+                    </option>
+                  ))}
+                </select>
               </div>
-            ))}
-            {materials.length === 0 && (
-              <p className="text-sm text-zinc-500">No materials yet. Upload or add a link.</p>
-            )}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">New Course Title</label>
+                <input
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  placeholder="Course title"
+                  className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors focus:border-indigo-500"
+                />
+              </div>
+              <div className="flex items-end">
+                <button
+                  onClick={() => void onCreateCourse()}
+                  disabled={busy}
+                  className="w-full rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  ➕ Create Course
+                </button>
+              </div>
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Course Code</label>
+                <input
+                  value={newCode}
+                  onChange={(e) => setNewCode(e.target.value)}
+                  placeholder="e.g. CSE101"
+                  className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Term</label>
+                <input
+                  value={newTerm}
+                  onChange={(e) => setNewTerm(e.target.value)}
+                  placeholder="e.g. Fall 2024"
+                  className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors focus:border-indigo-500"
+                />
+              </div>
+            </div>
           </div>
-        </section>
-      </main>
-    </div>
+
+          <div className="rounded-2xl border-2 border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="text-lg font-bold text-slate-900 mb-4">📄 Upload File</h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Category</label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value as "theory" | "lab")}
+                  className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors focus:border-indigo-500"
+                >
+                  <option value="theory">📚 Theory</option>
+                  <option value="lab">🔬 Lab</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Type</label>
+                <select
+                  value={type}
+                  onChange={(e) => setType(e.target.value as "pdf" | "slides" | "code" | "note")}
+                  className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors focus:border-indigo-500"
+                >
+                  <option value="pdf">📄 PDF</option>
+                  <option value="slides">📊 Slides</option>
+                  <option value="code">💻 Code</option>
+                  <option value="note">📝 Note</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Title</label>
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Optional title"
+                  className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Week</label>
+                <input
+                  value={week}
+                  onChange={(e) => setWeek(e.target.value)}
+                  placeholder="Week number"
+                  className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Topic</label>
+                <input
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                  placeholder="Topic name"
+                  className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Tags</label>
+                <input
+                  value={tags}
+                  onChange={(e) => setTags(e.target.value)}
+                  placeholder="comma, separated"
+                  className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors focus:border-indigo-500"
+                />
+              </div>
+            </div>
+            <div className="mt-4">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Select File</label>
+              <input
+                type="file"
+                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                className="block w-full text-sm text-slate-700 file:mr-4 file:rounded-xl file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer"
+              />
+            </div>
+            <div className="mt-4 flex gap-3 items-center">
+              <button
+                onClick={() => void onUpload()}
+                disabled={busy || !courseId || !file}
+                className="rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {busy ? "⏳ Uploading..." : "📤 Upload"}
+              </button>
+              {uploaded && (
+                <span className="text-sm font-medium text-emerald-600">
+                  ✓ Uploaded successfully! Ingest from list below.
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border-2 border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="text-lg font-bold text-slate-900 mb-4">🔗 Add Link</h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Title *</label>
+                <input
+                  value={linkTitle}
+                  onChange={(e) => setLinkTitle(e.target.value)}
+                  placeholder="Link title"
+                  className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">URL *</label>
+                <input
+                  value={linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                  placeholder="https://..."
+                  className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Topic</label>
+                <input
+                  value={linkTopic}
+                  onChange={(e) => setLinkTopic(e.target.value)}
+                  placeholder="Optional"
+                  className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Week</label>
+                <input
+                  value={linkWeek}
+                  onChange={(e) => setLinkWeek(e.target.value)}
+                  placeholder="Week number"
+                  className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors focus:border-indigo-500"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Tags</label>
+                <input
+                  value={linkTags}
+                  onChange={(e) => setLinkTags(e.target.value)}
+                  placeholder="comma, separated"
+                  className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors focus:border-indigo-500"
+                />
+              </div>
+            </div>
+            <button
+              onClick={() => void onAddLink()}
+              disabled={busy || !courseId || !linkTitle || !linkUrl}
+              className="mt-4 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              ➕ Add Link
+            </button>
+          </div>
+
+          <div className="rounded-2xl border-2 border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="text-lg font-bold text-slate-900 mb-4">📚 Materials ({materials.length})</h3>
+            <div className="space-y-3">
+              {materials.map((m) => (
+                <div
+                  key={m.id}
+                  className="rounded-xl border-2 border-slate-200 bg-slate-50/50 p-4 transition-all hover:border-indigo-200 hover:shadow-sm"
+                >
+                  {editId === m.id ? (
+                    <>
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        <input
+                          value={editForm.title}
+                          onChange={(e) =>
+                            setEditForm((f) => ({ ...f, title: e.target.value }))
+                          }
+                          placeholder="Title"
+                          className="flex-1 min-w-[200px] rounded-lg border-2 border-slate-200 px-3 py-2 text-sm text-slate-900"
+                        />
+                        <input
+                          value={editForm.topic}
+                          onChange={(e) =>
+                            setEditForm((f) => ({ ...f, topic: e.target.value }))
+                          }
+                          placeholder="Topic"
+                          className="flex-1 min-w-[150px] rounded-lg border-2 border-slate-200 px-3 py-2 text-sm text-slate-900"
+                        />
+                        <input
+                          value={editForm.week}
+                          onChange={(e) =>
+                            setEditForm((f) => ({ ...f, week: e.target.value }))
+                          }
+                          placeholder="Week"
+                          className="w-20 rounded-lg border-2 border-slate-200 px-3 py-2 text-sm text-slate-900"
+                        />
+                        <input
+                          value={editForm.tags}
+                          onChange={(e) =>
+                            setEditForm((f) => ({ ...f, tags: e.target.value }))
+                          }
+                          placeholder="Tags"
+                          className="flex-1 min-w-[150px] rounded-lg border-2 border-slate-200 px-3 py-2 text-sm text-slate-900"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => void onUpdate()}
+                          disabled={busy}
+                          className="rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+                        >
+                          ✓ Save
+                        </button>
+                        <button
+                          onClick={() => setEditId(null)}
+                          className="rounded-lg border-2 border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                        >
+                          ✕ Cancel
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex-1 min-w-[200px]">
+                        <div className="font-bold text-slate-900">{m.title}</div>
+                        <div className="mt-1 flex flex-wrap gap-2 text-xs">
+                          <span className="rounded-lg bg-indigo-100 px-2 py-0.5 font-semibold text-indigo-700">
+                            {m.category}
+                          </span>
+                          <span className="rounded-lg bg-slate-200 px-2 py-0.5 font-semibold text-slate-700">
+                            {m.type}
+                          </span>
+                          {m.week != null && (
+                            <span className="text-slate-600 font-medium">Week {m.week}</span>
+                          )}
+                          {m.topic && (
+                            <span className="text-slate-600 font-medium">• {m.topic}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => startEdit(m)}
+                          className="rounded-lg border-2 border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
+                        >
+                          ✏️ Edit
+                        </button>
+                        {m.type !== "link" && (
+                          <button
+                            onClick={() => void onIngest(m)}
+                            disabled={ingestId != null}
+                            className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+                          >
+                            {ingestId === m.id ? "⏳ Ingesting..." : "🔄 Ingest"}
+                          </button>
+                        )}
+                        <button
+                          onClick={() => void onDelete(m)}
+                          disabled={busy}
+                          className="rounded-lg border-2 border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors"
+                        >
+                          🗑️ Delete
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+              {materials.length === 0 && (
+                <div className="rounded-xl border-2 border-dashed border-slate-300 bg-white p-8 text-center">
+                  <div className="text-4xl mb-2">📚</div>
+                  <p className="text-sm font-medium text-slate-900 mb-1">No materials yet</p>
+                  <p className="text-sm text-slate-600">Upload a file or add a link to get started.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+    </UnifiedLayout>
   );
 }

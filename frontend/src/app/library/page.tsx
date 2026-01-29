@@ -11,7 +11,7 @@ import {
   type ListMaterialsFilters,
 } from "@/lib/api";
 import { useMe } from "@/lib/use-me";
-
+import { UnifiedLayout } from "@/components/UnifiedLayout";
 
 export default function LibraryPage() {
   const router = useRouter();
@@ -101,203 +101,197 @@ export default function LibraryPage() {
 
   if (meLoading || !me) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-zinc-500">Loading…</p>
-      </div>
+      <UnifiedLayout>
+        <div className="flex h-full items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
+            <p className="mt-4 text-slate-700 font-medium">Loading...</p>
+          </div>
+        </div>
+      </UnifiedLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50">
-      <header className="border-b border-zinc-200 bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-6">
-            <Link href="/" className="text-lg font-semibold">
-              Course Shera
-            </Link>
-            <nav className="flex gap-4">
-              <Link href="/library" className="text-sm font-medium text-zinc-900">
-                Library
-              </Link>
-              <Link href="/search" className="text-sm text-zinc-500 hover:text-zinc-900">
-                Search
-              </Link>
-              <Link href="/generate" className="text-sm text-zinc-500 hover:text-zinc-900">
-                Generate
-              </Link>
-              <Link href="/chat" className="text-sm text-zinc-500 hover:text-zinc-900">
-                Chat
-              </Link>
-              {isAdmin && (
-                <Link href="/admin/upload" className="text-sm text-zinc-500 hover:text-zinc-900">
-                  Admin
-                </Link>
-              )}
-            </nav>
-          </div>
-          <LogoutButton />
-        </div>
+    <UnifiedLayout>
+      <header className="h-16 bg-white border-b border-slate-200 flex items-center px-8">
+        <h1 className="text-sm font-bold text-slate-400 uppercase tracking-widest">Library</h1>
       </header>
 
-      <main className="mx-auto max-w-5xl px-6 py-10">
-        <div className="flex flex-col gap-6">
+      <section className="flex-1 overflow-y-auto bg-slate-50/50 p-8">
+        <div className="mx-auto max-w-7xl space-y-6">
+          {/* Header */}
           <div>
-            <h2 className="text-2xl font-semibold tracking-tight">Library</h2>
-            <p className="mt-1 text-sm text-zinc-600">
-              Browse course materials (Theory / Lab). Filter by course, topic, week, tags.
+            <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Course Materials</h2>
+            <p className="mt-2 text-slate-600 text-base">
+              Browse and access theory notes, lab materials, slides, and supplementary content.
             </p>
           </div>
 
-          <div className="grid gap-4 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm sm:grid-cols-2 lg:grid-cols-4">
-            <div>
-              <label className="block text-xs font-medium text-zinc-500">Course</label>
-              <select
-                value={filters.courseId ?? ""}
-                onChange={(e) =>
-                  setFilters((f) => ({
-                    ...f,
-                    courseId: e.target.value || undefined,
-                  }))
-                }
-                className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-400"
-              >
-                <option value="">All</option>
-                {courses.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.title}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-zinc-500">Category</label>
-              <select
-                value={filters.category ?? ""}
-                onChange={(e) =>
-                  setFilters((f) => ({
-                    ...f,
-                    category: (e.target.value || undefined) as "theory" | "lab" | undefined,
-                  }))
-                }
-                className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-400"
-              >
-                <option value="">All</option>
-                <option value="theory">Theory</option>
-                <option value="lab">Lab</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-zinc-500">Type</label>
-              <select
-                value={filters.type ?? ""}
-                onChange={(e) =>
-                  setFilters((f) => ({ ...f, type: e.target.value || undefined }))
-                }
-                className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-400"
-              >
-                <option value="">All</option>
-                <option value="pdf">PDF</option>
-                <option value="slides">Slides</option>
-                <option value="code">Code</option>
-                <option value="note">Note</option>
-                <option value="link">Link</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-zinc-500">Week</label>
-              <input
-                type="number"
-                min={1}
-                value={filters.week ?? ""}
-                onChange={(e) => {
-                  const v = e.target.value ? Number(e.target.value) : undefined;
-                  setFilters((f) => ({ ...f, week: v }));
-                }}
-                placeholder="Any"
-                className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-400"
-              />
-            </div>
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-medium text-zinc-500">Topic</label>
-              <input
-                value={filters.topic ?? ""}
-                onChange={(e) =>
-                  setFilters((f) => ({ ...f, topic: e.target.value || undefined }))
-                }
-                placeholder="Filter by topic"
-                className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-400"
-              />
-            </div>
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-medium text-zinc-500">Tags (comma-separated)</label>
-              <input
-                value={filters.tags ?? ""}
-                onChange={(e) =>
-                  setFilters((f) => ({ ...f, tags: e.target.value || undefined }))
-                }
-                placeholder="e.g. demo, week1"
-                className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-400"
-              />
+          {/* Filters */}
+          <div className="rounded-2xl border border-indigo-100 bg-white p-6 shadow-sm">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-700">Course</label>
+                <select
+                  value={filters.courseId ?? ""}
+                  onChange={(e) =>
+                    setFilters((f) => ({
+                      ...f,
+                      courseId: e.target.value || undefined,
+                    }))
+                  }
+                  className="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 font-medium outline-none focus:border-indigo-500 transition-colors"
+                >
+                  <option value="">All Courses</option>
+                  {courses.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-700">Category</label>
+                <select
+                  value={filters.category ?? ""}
+                  onChange={(e) =>
+                    setFilters((f) => ({
+                      ...f,
+                      category: (e.target.value || undefined) as "theory" | "lab" | undefined,
+                    }))
+                  }
+                  className="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 font-medium outline-none focus:border-indigo-500 transition-colors"
+                >
+                  <option value="">All Categories</option>
+                  <option value="theory">📚 Theory</option>
+                  <option value="lab">🔬 Lab</option>
+                </select>
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-700">Type</label>
+                <select
+                  value={filters.type ?? ""}
+                  onChange={(e) =>
+                    setFilters((f) => ({ ...f, type: e.target.value || undefined }))
+                  }
+                  className="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 font-medium outline-none focus:border-indigo-500 transition-colors"
+                >
+                  <option value="">All Types</option>
+                  <option value="pdf">📄 PDF</option>
+                  <option value="slides">📊 Slides</option>
+                  <option value="code">💻 Code</option>
+                  <option value="note">📝 Note</option>
+                  <option value="link">🔗 Link</option>
+                </select>
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-700">Week</label>
+                <input
+                  type="number"
+                  min={1}
+                  value={filters.week ?? ""}
+                  onChange={(e) => {
+                    const v = e.target.value ? Number(e.target.value) : undefined;
+                    setFilters((f) => ({ ...f, week: v }));
+                  }}
+                  placeholder="Any week"
+                  className="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-colors focus:border-indigo-500"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">Topic</label>
+                <input
+                  value={filters.topic ?? ""}
+                  onChange={(e) =>
+                    setFilters((f) => ({ ...f, topic: e.target.value || undefined }))
+                  }
+                  placeholder="Filter by topic"
+                  className="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-colors focus:border-indigo-500"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">Tags (comma-separated)</label>
+                <input
+                  value={filters.tags ?? ""}
+                  onChange={(e) =>
+                    setFilters((f) => ({ ...f, tags: e.target.value || undefined }))
+                  }
+                  placeholder="e.g. demo, week1"
+                  className="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-colors focus:border-indigo-500"
+                />
+              </div>
             </div>
           </div>
 
           {err && (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-              {err}
+            <div className="rounded-xl border-2 border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
+              ⚠️ {err}
             </div>
           )}
 
           {loading ? (
-            <p className="text-sm text-zinc-500">Loading…</p>
+            <div className="flex items-center justify-center py-12">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-200 border-t-indigo-600"></div>
+            </div>
           ) : (
-            <div className="grid gap-4">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {items.map((m) => (
                 <div
                   key={m.id}
-                  className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm"
+                  className="group rounded-2xl border-2 border-slate-200 bg-white p-6 shadow-sm transition-all hover:border-indigo-200 hover:shadow-lg"
                 >
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex flex-col gap-4">
                     <div>
-                      <div className="text-base font-semibold">{m.title}</div>
-                      <div className="mt-1 flex flex-wrap gap-2 text-sm text-zinc-600">
-                        <span className="rounded-md bg-zinc-100 px-2 py-0.5">
+                      <h3 className="text-lg font-bold text-slate-900">{m.title}</h3>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <span className="rounded-lg bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
                           {m.category}
                         </span>
-                        <span className="rounded-md bg-zinc-100 px-2 py-0.5">
+                        <span className="rounded-lg bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
                           {m.type}
                         </span>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
                         {m.week != null && (
-                          <span className="text-zinc-500">Week {m.week}</span>
+                          <span className="font-medium">📅 Week {m.week}</span>
                         )}
                         {m.topic && (
-                          <span className="text-zinc-500">Topic: {m.topic}</span>
+                          <span className="font-medium">📚 {m.topic}</span>
                         )}
                       </div>
                       {m.tags && m.tags.length > 0 && (
-                        <div className="mt-2 text-xs text-zinc-500">
-                          {m.tags.join(", ")}
+                        <div className="mt-3 flex flex-wrap gap-1">
+                          {m.tags.map((tag, i) => (
+                            <span key={i} className="rounded-md bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+                              #{tag}
+                            </span>
+                          ))}
                         </div>
                       )}
                     </div>
                     <button
                       onClick={() => openMaterial(m)}
-                      className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+                      className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-700"
                     >
-                      {m.link_url ? "Open link" : "Open file"}
+                      {m.link_url ? "🔗 Open Link" : "📄 Open File"}
                     </button>
                   </div>
                 </div>
               ))}
               {items.length === 0 && (
-                <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-10 text-center text-sm text-zinc-600">
-                  No materials match. Try different filters or ask an admin to upload
-                  content.
+                <div className="col-span-full rounded-2xl border-2 border-dashed border-slate-300 bg-white p-12 text-center">
+                  <div className="text-4xl mb-4">📚</div>
+                  <p className="text-lg font-semibold text-slate-900 mb-2">No materials found</p>
+                  <p className="text-sm text-slate-600">
+                    Try adjusting your filters or ask an admin to upload content.
+                  </p>
                 </div>
               )}
             </div>
           )}
         </div>
-      </main>
-    </div>
+      </section>
+    </UnifiedLayout>
   );
 }

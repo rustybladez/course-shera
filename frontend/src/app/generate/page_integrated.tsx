@@ -101,11 +101,11 @@ export default function GeneratePage() {
 
       setState({ materials, isLoading: false, error: null });
       setActiveTab("notes");
-    } catch (err) {
+    } catch (err: any) {
       setState({
         materials: null,
         isLoading: false,
-        error: err instanceof Error ? err.message : "Generation failed",
+        error: err.message || "Generation failed",
       });
     }
   };

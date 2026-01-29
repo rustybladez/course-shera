@@ -1,5 +1,5 @@
 {
-    "name": "EduGenius AI Platform",
+    "name": "EduGenie",
     "description": "A high-end educational platform that generates comprehensive learning materials including reading notes, interactive slides, and code labs using advanced Gemini models.",
     "requestFramePermissions": [
       "camera",

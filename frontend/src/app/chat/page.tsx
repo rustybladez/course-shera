@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createThread, listThreadMessages, sendThreadMessage } from "@/lib/api";
+import { UnifiedLayout } from "@/components/UnifiedLayout";
 
 type Msg = { id: string; role: string; content: string; created_at: string };
 
@@ -43,7 +44,6 @@ export default function ChatPage() {
     setErr(null);
     setText("");
     try {
-      // optimistic append
       const now = new Date().toISOString();
       setMsgs((m) => [
         ...m,
@@ -59,59 +59,81 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-[calc(100vh-1px)] max-w-5xl flex-col px-6 py-10">
-      <div>
-        <h2 className="text-2xl font-semibold tracking-tight">Chat</h2>
-        <p className="mt-1 text-sm text-zinc-600">
-          MVP chat (tool-calling + citations comes next).
-        </p>
-      </div>
+    <UnifiedLayout>
+      <header className="h-16 bg-white border-b border-slate-200 flex items-center px-8">
+        <h1 className="text-sm font-bold text-slate-400 uppercase tracking-widest">
+          Chat Assistant
+        </h1>
+      </header>
 
-      {err ? (
-        <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {err}
-        </div>
-      ) : null}
+      <section className="flex-1 overflow-hidden bg-slate-50/50 flex flex-col p-8">
+        <div className="mx-auto w-full max-w-4xl flex flex-col h-full gap-4">
+          {/* Info banner */}
+          <div className="rounded-2xl border-2 border-indigo-100 bg-white p-4 shadow-sm">
+            <p className="text-sm text-slate-700 font-medium">
+              💬 Ask questions and get answers. <span className="text-slate-600">(Tool-calling + citations coming next)</span>
+            </p>
+          </div>
 
-      <div className="mt-6 flex-1 space-y-3 overflow-auto rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-        {msgs.map((m) => (
-          <div key={m.id} className={m.role === "user" ? "text-right" : ""}>
-            <div
-              className={[
-                "inline-block max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-6",
-                m.role === "user"
-                  ? "bg-zinc-900 text-white"
-                  : "bg-zinc-100 text-zinc-900",
-              ].join(" ")}
-            >
-              {m.content}
+          {err && (
+            <div className="rounded-xl border-2 border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
+              ⚠️ {err}
+            </div>
+          )}
+
+          {/* Messages area */}
+          <div className="flex-1 overflow-y-auto rounded-2xl border-2 border-slate-200 bg-white p-6 shadow-sm">
+            <div className="space-y-4">
+              {msgs.map((m) => (
+                <div key={m.id} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
+                  <div
+                    className={[
+                      "inline-block max-w-[85%] rounded-2xl px-5 py-3 text-sm leading-relaxed shadow-sm",
+                      m.role === "user"
+                        ? "bg-indigo-600 text-white"
+                        : "bg-slate-100 text-slate-900 border-2 border-slate-200",
+                    ].join(" ")}
+                  >
+                    {m.content}
+                  </div>
+                </div>
+              ))}
+              {msgs.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="text-6xl mb-4">💬</div>
+                  <h3 className="text-lg font-bold text-slate-900 mb-2">Start a Conversation</h3>
+                  <p className="text-sm text-slate-600">
+                    Ask me anything about your courses!
+                  </p>
+                </div>
+              )}
             </div>
           </div>
-        ))}
-        {msgs.length === 0 ? (
-          <div className="text-sm text-zinc-600">Starting chat…</div>
-        ) : null}
-      </div>
 
-      <div className="mt-4 flex gap-3">
-        <input
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Ask a question..."
-          className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none focus:border-zinc-400"
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) void onSend();
-          }}
-        />
-        <button
-          onClick={() => void onSend()}
-          disabled={!threadId || loading || !text.trim()}
-          className="rounded-xl bg-zinc-900 px-5 py-3 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-60"
-        >
-          {loading ? "Sending…" : "Send"}
-        </button>
-      </div>
-    </div>
+          {/* Input area */}
+          <div className="flex gap-3">
+            <input
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Type your message..."
+              className="flex-1 rounded-xl border-2 border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-colors focus:border-indigo-500"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  void onSend();
+                }
+              }}
+            />
+            <button
+              onClick={() => void onSend()}
+              disabled={!threadId || loading || !text.trim()}
+              className="rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {loading ? "⏳" : "📤"} {loading ? "Sending..." : "Send"}
+            </button>
+          </div>
+        </div>
+      </section>
+    </UnifiedLayout>
   );
 }
-
