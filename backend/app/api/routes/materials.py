@@ -13,7 +13,12 @@ from app.db import get_db
 from app.models import Course, Material, MaterialChunk
 from app.schemas import MaterialLinkCreate, MaterialOut, MaterialUpdate
 from app.services.gemini import GeminiService
-from app.services.ingest import extract_text_from_path, simple_chunk
+from app.services.ingest import (
+    chunk_code_structure,
+    chunk_theory_improved,
+    extract_text_from_path,
+    is_code_material,
+)
 
 router = APIRouter()
 
@@ -259,30 +264,53 @@ def ingest_material(
         raise HTTPException(status_code=400, detail="Link-only materials cannot be ingested")
 
     extracted = extract_text_from_path(m.storage_path)
-    chunks = simple_chunk(extracted.text)
-    if not chunks:
+    path = m.storage_path or ""
+    is_code = is_code_material(m.type or "", path)
+
+    if is_code:
+        code_chunks = chunk_code_structure(extracted.text, path)
+        texts = [c.text for c in code_chunks]
+    else:
+        raw = chunk_theory_improved(extracted.text, path)
+        texts = raw
+
+    if not texts:
         raise HTTPException(status_code=400, detail="No extractable text found")
 
     gemini = GeminiService()
     if not gemini.is_configured():
         raise HTTPException(status_code=400, detail="GEMINI_API_KEY is not configured")
 
-    embeddings = gemini.embed(chunks)
+    embeddings = gemini.embed(texts)
 
-    # Clear old chunks (re-ingest)
     db.query(MaterialChunk).filter(MaterialChunk.material_id == m.id).delete()
     db.commit()
 
-    for idx, (txt, emb) in enumerate(zip(chunks, embeddings, strict=False)):
-        db.add(
-            MaterialChunk(
-                material_id=m.id,
-                chunk_index=idx,
-                text=txt,
-                embedding=emb,
+    if is_code:
+        for idx, (cc, emb) in enumerate(zip(code_chunks, embeddings, strict=False)):
+            db.add(
+                MaterialChunk(
+                    material_id=m.id,
+                    chunk_index=idx,
+                    text=cc.text,
+                    embedding=emb,
+                    language=cc.language,
+                    symbol_name=cc.symbol_name,
+                    start_line=cc.start_line,
+                    end_line=cc.end_line,
+                )
             )
-        )
+    else:
+        for idx, (txt, emb) in enumerate(zip(texts, embeddings, strict=False)):
+            db.add(
+                MaterialChunk(
+                    material_id=m.id,
+                    chunk_index=idx,
+                    text=txt,
+                    embedding=emb,
+                )
+            )
     db.commit()
 
-    return {"material_id": str(m.id), "chunks_added": len(chunks)}
+    return {"material_id": str(m.id), "chunks_added": len(texts)}
 
