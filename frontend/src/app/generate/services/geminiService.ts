@@ -1,33 +1,46 @@
-// Backend-integrated service - no client-side Gemini SDK
-// Visual generation uses backend API endpoint
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// Frontend image generation using Google GenAI SDK
+import { GoogleGenAI } from "@google/genai";
 
 export class GeminiService {
-  /**
-   * Generate visual aids using backend API endpoint
-   */
-  static async generateVisual(prompt: string): Promise<string | null> {
-    try {
-      const response = await fetch(`${API_URL}/generate/image`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ prompt }),
-      });
-
-      if (!response.ok) {
-        console.error("Image generation failed:", response.status);
-        return null;
-      }
-
-      const data = await response.json();
-      return data.image_url || null;
-    } catch (error) {
-      console.error("Image generation error:", error);
+  private static getClient() {
+    // Use the API key from environment variable
+    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    if (!apiKey) {
+      console.error("NEXT_PUBLIC_GEMINI_API_KEY not configured");
       return null;
     }
+    return new GoogleGenAI({ apiKey });
+  }
+
+  /**
+   * Generates a visual aid using gemini-2.5-flash-image
+   */
+  static async generateVisual(prompt: string): Promise<string | null> {
+    const ai = this.getClient();
+    if (!ai) return null;
+
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-image',
+        contents: {
+          parts: [{ text: `Highly educational diagram or illustration showing: ${prompt}. Clean aesthetic, white background, scientific style.` }],
+        },
+        config: {
+          imageConfig: {
+            aspectRatio: "16:9",
+          }
+        },
+      });
+
+      for (const part of response.candidates?.[0]?.content?.parts || []) {
+        if (part.inlineData) {
+          return `data:image/png;base64,${part.inlineData.data}`;
+        }
+      }
+    } catch (e) {
+      console.error("Image generation failed", e);
+    }
+    return null;
   }
 }
 

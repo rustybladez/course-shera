@@ -39,7 +39,7 @@ export default function Home() {
             <h1 className="text-balance text-5xl font-extrabold tracking-tight text-slate-900 sm:text-7xl animate-fade-in-up [animation-delay:100ms]">
               Supercharge Your <br />
               <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                System Design Courses
+                Academic Courses
               </span>
             </h1>
             
