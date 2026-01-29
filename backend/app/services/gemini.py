@@ -46,3 +46,25 @@ class GeminiService:
         )
         return (res.text or "").strip()
 
+    def generate_image(self, prompt: str) -> str | None:
+        """
+        Generate a visual placeholder using Unsplash for educational content.
+        Returns image URL from Unsplash based on the prompt keywords.
+        """
+        try:
+            # Extract key words from prompt for better image search
+            keywords = prompt.replace("Educational diagram for: ", "").replace("Educational diagram: ", "")
+            # Clean and format keywords for Unsplash
+            keywords = keywords.replace(" ", ",").lower()
+            # Limit to first few keywords to avoid overly specific searches
+            keywords = ",".join(keywords.split(",")[:3])
+            
+            # Use Unsplash Source API for random educational/tech images
+            # This doesn't require an API key and provides high-quality images
+            image_url = f"https://source.unsplash.com/1600x900/?{keywords},education,technology,abstract"
+            
+            return image_url
+        except Exception as e:
+            print(f"Image URL generation failed: {e}")
+            # Fallback to a generic educational placeholder
+            return "https://source.unsplash.com/1600x900/?education,technology,abstract"

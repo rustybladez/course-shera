@@ -3,14 +3,20 @@ from __future__ import annotations
 import json
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.schemas import GenerateRequest, GenerateResponse
 from app.services.gemini import GeminiService
 from app.services.search import run_search
+from app.services.validation import ValidationService
 
 router = APIRouter()
+
+
+class GenerateImageRequest(BaseModel):
+    prompt: str
 
 
 def _system_prompt(mode: str) -> str:
@@ -108,13 +114,25 @@ def generate(req: GenerateRequest, db: Session = Depends(get_db)):
     
     md = gemini.generate_markdown(_system_prompt(req.mode), user)
 
-    # Minimal validation: ensure at least one citation marker if we had sources.
-    validation = None
-    if citations:
-        validation = {
-            "has_any_citation_marker": "[cite:" in md,
-            "retrieved_chunks": [str(c) for c in citations],
-        }
+    # Run validation pipeline
+    validator = ValidationService(gemini)
+    validation = validator.validate_content(
+        content=md,
+        content_type=req.mode,
+        topic=req.prompt,
+        grounding_chunks=sources if sources else None,
+    )
 
     return GenerateResponse(content_markdown=md, citations=citations, validation=validation)
 
+
+@router.post("/image")
+def generate_image(req: GenerateImageRequest):
+    """Generate an educational diagram image URL for slides."""
+    gemini = GeminiService()
+    
+    image_url = gemini.generate_image(req.prompt)
+    if not image_url:
+        raise HTTPException(status_code=500, detail="Image URL generation failed")
+    
+    return {"image_url": image_url}

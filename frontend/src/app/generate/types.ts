@@ -20,6 +20,17 @@ export enum MaterialType {
     code: string;
     explanation: string;
   }
+
+  export interface ValidationReport {
+    syntax_score: number;
+    grounding_score: number;
+    rubric_score: number;
+    ai_eval_score: number;
+    final_score: number;
+    verdict: "PASS" | "REVIEW" | "FAIL";
+    ai_explanation: string;
+    notes: string[];
+  }
   
   export interface LearningMaterials {
     topic: string;
@@ -27,12 +38,9 @@ export enum MaterialType {
     slides: Slide[];
     lab: LabExercise;
     groundingSources?: Array<{ title: string; uri: string }>;
-  }
-  
-  export interface AppState {
-    materials: LearningMaterials | null;
-    isLoading: boolean;
-    error: string | null;
-    isGeneratingImages: boolean;
-  }
+    validation?: {
+      theory?: ValidationReport;
+      slides?: ValidationReport;
+      lab?: ValidationReport;
+    };
   

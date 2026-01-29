@@ -97,6 +97,11 @@ export default function GeneratePage() {
         slides: slides.length > 0 ? slides : [{ title: "Generated Slides", content: slidesContent }],
         lab,
         groundingSources: [],
+        validation: {
+          theory: notesRes.validation,
+          slides: slidesRes.validation,
+          lab: labRes.validation,
+        },
       };
 
       setState({ materials, isLoading: false, error: null });
@@ -214,12 +219,13 @@ export default function GeneratePage() {
             topic={state.materials.topic}
             notes={state.materials.readingNotes}
             sources={state.materials.groundingSources}
+            validation={state.materials.validation?.theory}
           />
         );
       case "slides":
-        return <SlidesViewer slides={state.materials.slides} />;
+        return <SlidesViewer slides={state.materials.slides} validation={state.materials.validation?.slides} />;
       case "lab":
-        return <LabViewer lab={state.materials.lab} />;
+        return <LabViewer lab={state.materials.lab} validation={state.materials.validation?.lab} />;
       default:
         return null;
     }

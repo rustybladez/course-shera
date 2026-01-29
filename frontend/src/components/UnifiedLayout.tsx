@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useMe } from '@/lib/use-me';
 
 interface UnifiedLayoutProps {
@@ -9,9 +9,16 @@ interface UnifiedLayoutProps {
 
 export const UnifiedLayout: React.FC<UnifiedLayoutProps> = ({ children }) => {
   const pathname = usePathname();
+  const router = useRouter();
   const { isAdmin } = useMe();
   
   const isActive = (path: string) => pathname === path;
+  
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user_role');
+    router.push('/login');
+  };
   
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
@@ -98,13 +105,13 @@ export const UnifiedLayout: React.FC<UnifiedLayoutProps> = ({ children }) => {
         </nav>
         
         <div className="p-6 border-t border-indigo-900/50">
-          <Link
-            href="/login"
+          <button
+            onClick={handleLogout}
             className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-800/50 hover:bg-indigo-800 text-white rounded-xl transition-all font-medium"
           >
             <i className="fas fa-sign-out-alt"></i>
             <span>Logout</span>
-          </Link>
+          </button>
         </div>
       </aside>
 

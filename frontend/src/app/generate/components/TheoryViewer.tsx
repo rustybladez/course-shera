@@ -1,37 +1,22 @@
 
 import React, { useState, useImperativeHandle, forwardRef } from 'react';
-import { GeminiService } from '../services/geminiService';
 import { jsPDF } from 'jspdf';
+import { ValidationReport } from '../types';
+import ValidationBadge from './ValidationBadge';
 
 interface TheoryViewerProps {
   topic?: string;
   notes: string;
   sources?: Array<{ title: string; uri: string }>;
+  validation?: ValidationReport;
 }
 
 export interface TheoryViewerHandle {
   exportPDF: () => void;
 }
 
-const TheoryViewer = forwardRef<TheoryViewerHandle, TheoryViewerProps>(({ topic, notes, sources }, ref) => {
-  const [isSpeaking, setIsSpeaking] = useState(false);
+const TheoryViewer = forwardRef<TheoryViewerHandle, TheoryViewerProps>(({ topic, notes, sources, validation }, ref) => {
   const [isExporting, setIsExporting] = useState(false);
-
-  const handleReadAloud = async () => {
-    if (isSpeaking) return;
-    setIsSpeaking(true);
-    try {
-      const previewText = notes
-        .replace(/[#*`_]/g, '')
-        .substring(0, 400);
-      await GeminiService.speakText(previewText);
-    } catch (err) {
-      console.error("Speech playback failed:", err);
-      alert("Text-to-speech failed. The service might be temporarily unavailable.");
-    } finally {
-      setIsSpeaking(false);
-    }
-  };
 
   const exportToPDF = async () => {
     if (isExporting) return;
@@ -134,6 +119,10 @@ const TheoryViewer = forwardRef<TheoryViewerHandle, TheoryViewerProps>(({ topic,
 
   return (
     <div className="space-y-8 animate-fade-in-up">
+      {validation && (
+        <ValidationBadge validation={validation} />
+      )}
+      
       <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
         <div className="px-8 py-6 bg-slate-50/50 border-b border-slate-100 flex justify-between items-center no-print">
           <div className="flex items-center gap-3">
@@ -144,14 +133,6 @@ const TheoryViewer = forwardRef<TheoryViewerHandle, TheoryViewerProps>(({ topic,
              </div>
           </div>
           <div className="flex gap-3">
-            <button 
-              onClick={handleReadAloud}
-              disabled={isSpeaking}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${isSpeaking ? 'bg-indigo-100 text-indigo-600' : 'bg-white text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 shadow-sm'}`}
-            >
-              <i className={`fas ${isSpeaking ? 'fa-spinner fa-spin' : 'fa-volume-high'}`}></i>
-              {isSpeaking ? 'Playing...' : 'Audio Guide'}
-            </button>
             <button 
               onClick={exportToPDF}
               disabled={isExporting}

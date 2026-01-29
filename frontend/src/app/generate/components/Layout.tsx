@@ -1,6 +1,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -11,6 +12,13 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, onExportPDF, hasMaterials }) => {
+  const router = useRouter();
+  
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user_role');
+    router.push('/login');
+  };
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
       {/* Sidebar */}
@@ -133,6 +141,16 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, onExp
             </div>
           </div>
         </nav>
+        
+        <div className="p-6 border-t border-indigo-900/50">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-800/50 hover:bg-indigo-800 text-white rounded-xl transition-all font-medium"
+          >
+            <i className="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+          </button>
+        </div>
       </aside>
 
       {/* Main Content */}

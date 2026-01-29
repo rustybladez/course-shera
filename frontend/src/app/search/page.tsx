@@ -10,6 +10,8 @@ import {
   listCourses,
   search,
   searchAsk,
+  materialFileUrl,
+  type Material,
   type SearchHit,
   type SearchAskResult,
 } from "@/lib/api";
@@ -38,6 +40,7 @@ export default function SearchPage() {
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [expandedAnswer, setExpandedAnswer] = useState(false);
+  const [materials, setMaterials] = useState<Map<string, Material>>(new Map());
 
   useEffect(() => {
     if (meLoading) return;
@@ -108,6 +111,29 @@ export default function SearchPage() {
       );
       setAskResult(res);
       setHits(res.hits);
+      
+      // Fetch material details for citations
+      const uniqueMaterialIds = new Set(res.hits.map(h => h.material_id));
+      const materialsMap = new Map<string, Material>();
+      
+      for (const materialId of uniqueMaterialIds) {
+        try {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/materials`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (response.ok) {
+            const allMaterials: Material[] = await response.json();
+            const material = allMaterials.find(m => m.id === materialId);
+            if (material) {
+              materialsMap.set(materialId, material);
+            }
+          }
+        } catch (err) {
+          console.error(`Failed to fetch material ${materialId}:`, err);
+        }
+      }
+      
+      setMaterials(materialsMap);
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
     } finally {
@@ -118,6 +144,33 @@ export default function SearchPage() {
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !loading && q.trim()) void onSearch();
   };
+
+  async function openMaterialFromCitation(materialId: string) {
+    const material = materials.get(materialId);
+    if (!material) return;
+    
+    if (material.link_url) {
+      window.open(material.link_url, "_blank", "noopener,noreferrer");
+      return;
+    }
+    if (!material.storage_url) return;
+    
+    const token = await getToken();
+    if (!token) return;
+    
+    const url = materialFileUrl(material.id);
+    try {
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to load file");
+      const blob = await res.blob();
+      const u = URL.createObjectURL(blob);
+      window.open(u, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      console.error("Failed to open material:", err);
+    }
+  }
 
   if (meLoading) {
     return (
@@ -305,10 +358,14 @@ export default function SearchPage() {
                   <div className="grid gap-3 sm:grid-cols-2">
                     {askResult.citations.map((citationId, idx) => {
                       const citedHit = hits.find((h) => String(h.chunk_id) === String(citationId));
+                      const hasMaterial = citedHit && materials.has(citedHit.material_id);
                       return (
                         <div
                           key={citationId}
-                          className="rounded-xl border-2 border-emerald-100 bg-white p-4 shadow-sm"
+                          onClick={() => citedHit && openMaterialFromCitation(citedHit.material_id)}
+                          className={`rounded-xl border-2 border-emerald-100 bg-white p-4 shadow-sm ${
+                            hasMaterial ? "cursor-pointer hover:border-emerald-400 hover:shadow-md transition-all hover:-translate-y-0.5" : ""
+                          }`}
                         >
                           <div className="mb-2 flex items-center gap-2">
                             <span className="inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white">
@@ -316,11 +373,15 @@ export default function SearchPage() {
                             </span>
                             {citedHit && (
                               <div className="min-w-0 flex-1">
-                                <div className="text-sm font-bold text-slate-900 truncate">
+                                <div className="text-sm font-bold text-slate-900 truncate flex items-center gap-1.5">
                                   {citedHit.material_title}
+                                  {hasMaterial && (
+                                    <i className="fas fa-external-link-alt text-[10px] text-emerald-600"></i>
+                                  )}
                                 </div>
                                 <div className="text-xs text-slate-600">
                                   {citedHit.category === "theory" ? "📚 Theory" : "🔬 Lab"}
+                                  {hasMaterial && <span className="ml-1.5 text-emerald-600 font-semibold">• Click to open</span>}
                                 </div>
                               </div>
                             )}

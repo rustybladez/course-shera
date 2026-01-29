@@ -1,14 +1,20 @@
 
 import React from 'react';
-import { LabExercise } from '../types';
+import { LabExercise, ValidationReport } from '../types';
+import ValidationBadge from './ValidationBadge';
 
 interface LabViewerProps {
   lab: LabExercise;
+  validation?: ValidationReport;
 }
 
-const LabViewer: React.FC<LabViewerProps> = ({ lab }) => {
+const LabViewer: React.FC<LabViewerProps> = ({ lab, validation }) => {
   return (
     <div className="space-y-6 animate-fade-in">
+      {validation && (
+        <ValidationBadge validation={validation} />
+      )}
+      
       <div className="bg-white rounded-2xl shadow-sm border p-8">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center">
