@@ -109,9 +109,3 @@ cd backend
 python -m alembic upgrade head  # future use
 ```
 
-## Demo flow
-
-- Upload a material (Admin upload page) → ingestion runs (chunk + embed)
-- Search by natural language → returns grounded excerpts
-- Generate notes/code → returns citations + validation report
-- Chat → uses the same tools with conversational memory
